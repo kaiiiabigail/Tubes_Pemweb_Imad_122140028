@@ -12,7 +12,7 @@ class MenuItem(Base):
     name = Column(String, unique=True, nullable=False)
     description = Column(String)
     price = Column(Float, nullable=False)
-    image_url = Column(String)
+    image_url = Column(String, nullable=True)
     category_id = Column(Integer, ForeignKey('categories.id'), nullable=False)
     is_available = Column(Boolean, default=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
@@ -24,13 +24,15 @@ class MenuItem(Base):
     category = relationship("Category", backref="menu_items")
     order_items = relationship('OrderItem', back_populates='menu_item')
 
-    def __init__(self, name, price, category_id, description=None, image_url=None, is_available=True):
+    def __init__(self, name, price, category_id, description=None, image_url=None, is_available=True, stock=0, sold=0):
         self.name = name
         self.price = price
         self.category_id = category_id
         self.description = description
         self.image_url = image_url
         self.is_available = is_available
+        self.stock = stock
+        self.sold = sold
         self.created_at = datetime.utcnow()
         self.updated_at = datetime.utcnow()
 
@@ -42,7 +44,9 @@ class MenuItem(Base):
             category_id=orm_obj.category_id,
             description=orm_obj.description,
             image_url=orm_obj.image_url,
-            is_available=orm_obj.is_available
+            is_available=orm_obj.is_available,
+            stock=getattr(orm_obj, 'stock', 0),
+            sold=getattr(orm_obj, 'sold', 0)
         )
 
     def to_dict(self):
@@ -82,7 +86,9 @@ class MenuItem(Base):
             category_id=data['category_id'],
             description=data.get('description'),
             image_url=data.get('image_url'),
-            is_available=data.get('is_available', True)
+            is_available=data.get('is_available', True),
+            stock=data.get('stock', 0),
+            sold=data.get('sold', 0)
         )
         dbsession.add(new_item)
         dbsession.flush()
